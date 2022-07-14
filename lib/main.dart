@@ -68,158 +68,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  List<String> _parseHtml(String htmlStr) {
-    List<String> res = [];
-    try {
-      var htmlParseList = RegExp(r'\[.*?\]').allMatches(htmlStr);
-      htmlParseList.forEach((element) {
-        String? ele = element.group(0);
-        if (ele != null && ele.isNotEmpty == true) {
-          res.add(ele);
-        }
-      });
-    } catch (e) {}
-    return res;
-  }
-
-  /// 解析html标签获取占位字符串
-  /// <div>{test-0-test}</div><p>test</p>
-  /// [test-0-test,test]
-  ///
-  List<String> _parseHtmlToPlaceHolderData(String htmlStr) {
-    List<String> res = [];
-    try {
-      var htmlParseList = RegExp(r'\[.*?\]').allMatches(htmlStr);
-      htmlParseList.forEach((element) {
-        String? ele = element.group(0);
-        if (ele != null && ele.isNotEmpty == true) {
-          res.add(ele);
-        }
-      });
-    } catch (e) {}
-    return res;
-  }
-
-  /// 解析html标签获取除占位字符串以外的字符串列表，如：
-  /// <div>[test-0-test]</div>
-  /// 调用方法后：
-  /// [<div>,</div>]
-  List<String> _splitHtml(String html) {
-    return html.split(RegExp(r'\[.*?\]'));
-  }
-
-  /**
-   * 根据html标签中的占位符获取Json中的真实数据。
-   */
-  List<String> _getHtmlPlaceHolderRealData(
-      List<String> placeHolderStr, Map<String, dynamic> map) {
-    List<String> result = [];
-    placeHolderStr.forEach((holder) {
-      List<dynamic> holderValue = jsonDecode(holder);
-      if (holderValue.length == 1) {
-        result.add(map[holderValue[0]]);
-      } else if (holderValue.length == 2) {
-        result.add(map[holderValue[0]][holderValue[1]]);
-      } else if (holderValue.length == 3) {
-        result.add(map[holderValue[0]][holderValue[1]][holderValue[2]]);
-      } else if (holderValue.length == 4) {
-        result.add(map[holderValue[0]][holderValue[1]][holderValue[2]]
-            [holderValue[3]]);
-      } else if (holderValue.length == 5) {
-        result.add(map[holderValue[0]][holderValue[1]][holderValue[2]]
-            [holderValue[3]][holderValue[4]]);
-      }
-    });
-    return result;
-  }
-
-  String _buildHtmlStr(List<String> data, List<String> lable) {
-    String res = lable[0];
-    for (var i = 0; i < data.length; i++) {
-      res = res + data[i] + lable[i + 1];
-    }
-    return res;
-  }
-
-  String _buildHtmlByJson(Map<String, dynamic> map, String html) {
-    //获取html标签中的占位字符串
-    List<String> placeHolder = _parseHtmlToPlaceHolderData(html);
-    //获取以 html标签中的占位字符串 分割后的字符串
-    List<String> lable = _splitHtml(html);
-
-    //获取真实数据
-    List<String> realData = _getHtmlPlaceHolderRealData(placeHolder, map);
-
-    return _buildHtmlStr(realData, lable);
-  }
-
-  /**
-   * 列表类型
-   */
-  dom.Document buildListStyleDocument(dom.Document document, String className) {
-    List<dom.Element> list = document.getElementsByClassName(className);
-    list.forEach((element) {
-      String res = element.outerHtml;
-      dom.Element? e = element.parent;
-      print('${e?.outerHtml}');
-      var index = e?.children.indexOf(element);
-      if (index != null && index >= 0) {
-        for (int i = 0; i < 3; i++) {
-          e?.children?.insert(index + 1 + i, dom.Element.html(res));
-        }
-        e?.children?.removeAt(index);
-      }
-      // e?.children.removeAt(index!);
-    });
-
-    return document;
-  }
-
-  /**
-   * 判断是否有table类型的模版
-   */
-  bool hasTableModel(dom.Document document) {
-    List<dom.Element> tableList = document.getElementsByTagName("table");
-    return tableList.isNotEmpty;
-  }
-
-  /**
-   * 表格类型
-   *
-   * @params size 要生成几行
-   *
-   */
-  void buildTableStyleDocument(dom.Document document, int size) {
-    print('localName:${document.children[0].localName}');
-    List<dom.Element> tableList = document.getElementsByTagName("table");
-    tableList.forEach((element) {
-      //element代表table，获取每一行
-      List<dom.Element> tr = element.getElementsByTagName("tr");
-      //判断是不是有标题行
-      if (tr != null && tr.isNotEmpty) {
-        //获取标题单元格
-        List<dom.Element> th = tr[0].getElementsByTagName("th");
-        var hasTitle = th.isNotEmpty; //判断有没有标题，true为有标题
-        //当前行第父结点
-        var parent = tr[0].parent;
-        //父节点的孩子结点列表
-        var childs = parent?.children;
-        var index = 0;
-        //如果有标题单元格，则数据模版是第二行
-        if (hasTitle) {
-          //模版行所在列表中的索引
-          index = 1;
-        }
-        var model = tr[index].outerHtml;
-        for (var i = 0; i < size; i++) {
-          childs?.insert(index + 1 + i, dom.Element.html(model));
-        }
-        //移除掉模版结点
-        childs?.removeAt(index);
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -233,61 +81,21 @@ class _MyHomePageState extends State<MyHomePage> {
       "destinationWhName": "USWC Warehouse",
       "isMasterPackage": "N",
       "leave": "A",
-      "mStatus": "PRESORTING_COMPLETED",
       "orderNo": "WI991128340300",
       "packageSerno": "B0400000001069804405",
-      "putAwaysArea": -1,
       "result": [
-        {
-          "abcAttribute": "B",
-          "isWorking": -1,
+        {"abcAttribute": "B",
           "itemQty": 0,
           "itemTotalQty": 4,
-          "palletStatus": -1,
-          "pickingType": -1,
-          "size": "0 * 0 * 0 (CM)",
           "sku": "M010000000004016060",
           "skuQty": 1,
           "skuSpec": "T50-",
-          "status": -1,
-          "width": 0,
           "winitOrderNo": "WI991128340300"
-        }
-      ],
-      "typeThree": [
-        {
-          "index": "序号",
-          "barcode": "条码",
-          "goods": "商品",
-          "numbers": "数量",
-          "isOnShelf": "是否上架"
-        },
-        {
-          "index": "1",
-          "barcode": "B04000000000000750",
-          "goods": "M*23398",
-          "numbers": "5",
-          "isOnShelf": "N"
-        },
-        {
-          "index": "2",
-          "barcode": "B04000000000000751",
-          "goods": "M*23399",
-          "numbers": "4",
-          "isOnShelf": "N"
-        },
-        {
-          "index": "3",
-          "barcode": "B04000000000000752",
-          "goods": "M*23349",
-          "numbers": "10",
-          "isOnShelf": "N"
-        }
-      ],
+        }],
       "scanKeword": "B0400000001069804405",
       "scanType": "B",
-      "status": 2131691974,
-      "taskType": -1,
+      "status": "PRESORTING_COMPLETED",
+      "totalQty": 1,
       "unloadTime": "2022-06-13 19:47"
     };
 
@@ -298,55 +106,22 @@ class _MyHomePageState extends State<MyHomePage> {
     <div><font color = \"#FF0033\" size='5'>[scanKeword] [scanType]</font></div>
     <table style="width:100%">
       <tr>
-		    <th>[typeThree-0-index]</th> 
-		    <th>[typeThree-0-barcode]</th> 
-		    <th>[typeThree-0-goods]</th> 
-		    <th>[typeThree-0-numbers]</th> 
-		    <th>[typeThree-0-isOnShelf]</th> 
+		    <th>[result-0-index]</th> 
+		    <th>[result-0-barcode]</th> 
+		    <th>[result-0-goods]</th> 
+		    <th>[result-0-numbers]</th> 
+		    <th>[result-0-isOnShelf]</th> 
 	    </tr>
       <tr> 
-		    <td>[typeThree-1-index]</td> 
-		    <td>[typeThree-1-barcode]</td> 
-		    <td><font color="#FF0033">[typeThree-1-goods]</font></td> 
-		    <td>[typeThree-1-numbers]</td> 
-		    <td>[typeThree-1-isOnShelf]</td> 
+		    <td>[result-1-index]</td> 
+		    <td>[result-1-barcode]</td> 
+		    <td><font color="#FF0033">[result-1-goods]</font></td> 
+		    <td>[result-1-numbers]</td> 
+		    <td>[result-1-isOnShelf]</td> 
 	    </tr>
   </table>
   </br>
     """;
-
-    // var resource = _buildHtmlByJson(result, htmlData);
-    // print('resource:$resource');
-    //
-    // dom.Document document = htmlparser.parse(htmlData1);
-    // var hasTableModels = hasTableModel(document);
-    // if (hasTableModels) {
-    //   //获取table的列表数据在json中的key值
-    //   List<String> tablePlaceHolder = getTableListPlaceHolder(document);
-    //   print('tablePlaceHolder:$tablePlaceHolder');
-    //   //计算每个table的item条数
-    //   for (var holder in tablePlaceHolder) {
-    //     var size = getListDataSize(holder, result);
-    //     buildTableStyleDocument(document,size);
-    //     print('size:$size');
-    //   }
-    // }
-
-    // var list = parseHtmlToPlaceHolderData("<div>[scanKeword] [scanType]</div>");
-    // print('list:${list}');
-    // var realData = getHtmlPlaceHolderRealData(list[0], result);
-    // print('realData:$realData');
-
-    //   List<dom.Element> th = element.getElementsByTagName("th");
-    //
-    //   List<dom.Element> td = element.getElementsByTagName("td");
-    //   var parent = element.parent;
-    //   var index = parent?.children.indexOf(element);
-    //   if (index != null && index >= 0) {}
-    //   td.forEach((tdele) {
-    //     print('${tdele.outerHtml}');
-    //   });
-    // });
     //将html模版解析成document
     dom.Document document = htmlparser.parse(htmlData1);
     TableUtil tableUtil = TableUtil(document, result);
@@ -400,79 +175,4 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  String moduleOne(Map<String, dynamic> json) {
-    String str = "";
-    json.forEach((key, value) {
-      if (key == "typeOne") {
-        str = typeOne(value, str);
-      } else if (key == "typeTwo") {
-        str = typeTwo(value, str);
-      } else if (key == "typeThree") {
-        str = typeThree(value, str);
-      }
-    });
-    return str;
-  }
-
-  /**
-   * 名称：类型模版
-   * 如：  单品条码:B04000000000000750
-   */
-  String typeOne(List<dynamic> list, String str) {
-    list.forEach((element) {
-      Map<String, dynamic> content = element;
-      str = str + "<p>";
-      content.forEach((k, v) {
-        str = str + "$v：";
-      });
-      str = str.substring(0, str.length - 1);
-      str = str + "</p></br>";
-    });
-    return str;
-  }
-
-  /**
-   * 一行多个类容
-   * 如：003274   10   2B  ...
-   */
-  String typeTwo(List<dynamic> list, String str) {
-    list.forEach((element) {
-      Map<String, dynamic> content = element;
-      str = str + "<p>";
-      content.forEach((k, v) {
-        str = str + "$v${space(2)}";
-      });
-      str = str.substring(0, str.length - 1);
-      str = str + "</p></br>";
-    });
-    return str;
-  }
-
-  /**
-   * 表格模版
-   */
-  String typeThree(List<dynamic> list, String str) {
-    str = str + "<table>";
-    list.forEach((element) {
-      Map<String, dynamic> content = element;
-      str = str + "<tr>";
-      content.forEach((key, value) {
-        str = str + "<td>$value</td>";
-      });
-      str = str + "</tr>";
-    });
-    str = str + "</table>";
-    return str;
-  }
-
-  /**
-   * 非严格
-   */
-  String space(int nums) {
-    String sp = " ";
-    for (int i = 0; i < nums; i++) {
-      sp = sp + "&nbsp";
-    }
-    return sp + " ";
-  }
 }

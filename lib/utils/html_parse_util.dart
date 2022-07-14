@@ -32,12 +32,30 @@ dynamic getHtmlPlaceHolderRealData(
     String placeHolderStr, Map<String, dynamic> map) {
   List<String> holder = placeHolderStr.split(RegExp(r'-'));
   dynamic res = map[holder[0]];
-  for(int i=1;i<holder.length;i++){
-    if(isNumeric(holder[i])){
+  for (int i = 1; i < holder.length; i++) {
+    if (isNumeric(holder[i])) {
+      //有数字，则是列表类型
+      if (res is! List<dynamic>) {
+        //如果placeholder有数字类型，但json数据对应的地方不是列表类型，则直接返回
+        break;
+      }
+      //转化为列表
+      List<dynamic> list = res;
+      var index = int.parse(holder[i]); //获取placeholder的数字
+      //如果数字大于列表长度，则直接返回
+      if (index >= list.length) {
+        break;
+      }
       res = res[int.parse(holder[i])];
-    }else{
+    } else {
       res = res[holder[i]];
     }
+    if (res == null) {
+      break;
+    }
+  }
+  if (res is! String) {
+    return "";
   }
   return res;
 }
@@ -45,18 +63,21 @@ dynamic getHtmlPlaceHolderRealData(
 /**
  * 获取列表长度
  */
-int getListDataSize(String placeHolderStr, Map<String, dynamic> map){
+int getListDataSize(String placeHolderStr, Map<String, dynamic> map) {
   List<String> holder = placeHolderStr.split(RegExp(r'-'));
   dynamic res = map[holder[0]];
+  if (res == null) {
+    return 0;
+  }
   bool hasNumber = false;
-  for(int i=1;i<holder.length;i++){
-    if(isNumeric(holder[i])){
+  for (int i = 1; i < holder.length; i++) {
+    if (isNumeric(holder[i])) {
       hasNumber = true;
       break;
     }
   }
 
-  if(hasNumber){
+  if (hasNumber) {
     return (res as List<dynamic>).length;
   }
   return 0;
@@ -70,16 +91,16 @@ bool isNumeric(String s) {
   return int.tryParse(s) != null;
 }
 
-String parseHtml(String htmlStr,Map<String, dynamic> map){
+String parseHtml(String htmlStr, Map<String, dynamic> map) {
   //占位字符列表
   List<String> placeHolderList = parseHtmlToPlaceHolderData(htmlStr);
   //标签字符列表
   List<String> tagList = splitHtml(htmlStr);
 
   String result = tagList[0];
-  for(var i=0;i<placeHolderList.length;i++){
-    String text = getHtmlPlaceHolderRealData(placeHolderList[i],map);
-    result = result + text + tagList[i+1];
+  for (var i = 0; i < placeHolderList.length; i++) {
+    String text = getHtmlPlaceHolderRealData(placeHolderList[i], map) ?? "";
+    result = result + text + tagList[i + 1];
   }
 
   return result;
